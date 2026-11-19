@@ -28,5 +28,7 @@ static lv_obj_t *create_obj(lv_fragment_t *self, lv_obj_t *container) {
                                  "limited to 720p, 1080p or 4K. Framerate will be also limited to 30/60 FPS."),
                     false);
     pref_checkbox(view, locstr("Mute computer while streaming"), &app_configuration->localaudio, true);
+    pref_checkbox(view, locstr("Apollo: Use Virtual Display"), &app_configuration->virtual_display, false);
+    pref_desc_label(view, locstr("Automatically create and match a dedicated virtual display on Apollo host."), false);
     return view;
 }

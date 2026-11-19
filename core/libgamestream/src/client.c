@@ -135,6 +135,10 @@ struct pairing_secret_t {
 };
 
 int gs_pair(GS_CLIENT hnd, PSERVER_DATA server, const char *pin) {
+    return gs_pair_otp(hnd, server, pin, NULL);
+}
+
+int gs_pair_otp(GS_CLIENT hnd, PSERVER_DATA server, const char *pin, const char *passphrase) {
     mbedtls_md_type_t hash_algo;
     size_t hash_length;
     if (server->serverMajorVersion >= 7) {
@@ -194,11 +198,25 @@ int gs_pair(GS_CLIENT hnd, PSERVER_DATA server, const char *pin) {
 
     hash_data(hash_algo, (unsigned char *) &salted_pin, sizeof(salted_pin), aes_key, NULL);
 
+    char otpauth_param[128] = {0};
+    if (passphrase != NULL && passphrase[0] != '\0') {
+        char plain_buf[256];
+        snprintf(plain_buf, sizeof(plain_buf), "%s%s%s", pin, salt_hex, passphrase);
+        unsigned char otp_hash[32];
+        hash_data(MBEDTLS_MD_SHA256, (unsigned char *)plain_buf, strlen(plain_buf), otp_hash, NULL);
+        char otp_hex[65];
+        for (int b = 0; b < 32; b++) {
+            sprintf(otp_hex + b * 2, "%02X", otp_hash[b]);
+        }
+        otp_hex[64] = '\0';
+        snprintf(otpauth_param, sizeof(otpauth_param), "&otpauth=%s", otp_hex);
+    }
+
     // Send the salt and get the server cert. This doesn't have a read timeout
     // because the user must enter the PIN before the server responds
     construct_url(hnd, url, sizeof(url), false, server->serverInfo.address, server_port(server, false), "pair",
-                  "devicename=%s&updateState=1&phrase=getservercert&salt=%s&clientcert=%s", hnd->device_name, salt_hex,
-                  hnd->cert_hex);
+                  "devicename=%s&updateState=1&phrase=getservercert&salt=%s&clientcert=%s%s", hnd->device_name, salt_hex,
+                  hnd->cert_hex, otpauth_param);
     data = http_data_alloc();
 
     if ((ret = http_request(hnd->http, url, data)) != GS_OK) {
@@ -484,6 +502,12 @@ int gs_applist(GS_CLIENT hnd, const SERVER_DATA *server, PAPP_LIST *list) {
 
 int gs_start_app(GS_CLIENT hnd, PSERVER_DATA server, STREAM_CONFIGURATION *config, int appId, bool is_gfe, bool sops,
                  bool localaudio, int gamepad_mask, const char* surround_params) {
+    return gs_start_app_ext(hnd, server, config, appId, is_gfe, sops, localaudio, gamepad_mask, surround_params, false, 100);
+}
+
+int gs_start_app_ext(GS_CLIENT hnd, PSERVER_DATA server, STREAM_CONFIGURATION *config, int appId, bool is_gfe, bool sops,
+                     bool localaudio, int gamepad_mask, const char* surround_params,
+                     bool virtual_display, int scale_factor) {
     int ret = GS_OK;
     char *result = NULL;
     HTTP_DATA *data = NULL;
@@ -570,6 +594,12 @@ int gs_start_app(GS_CLIENT hnd, PSERVER_DATA server, STREAM_CONFIGURATION *confi
         append_param(url, sizeof(url), "localAudioPlayMode", "%d", localaudio);
         append_param(url, sizeof(url), "remoteControllersBitmap", "%d", gamepad_mask);
         append_param(url, sizeof(url), "gcmap", "%d", gamepad_mask);
+        if (virtual_display) {
+            append_param(url, sizeof(url), "virtualDisplay", "1");
+        }
+        if (scale_factor > 0 && scale_factor != 100) {
+            append_param(url, sizeof(url), "scaleFactor", "%d", scale_factor);
+        }
     }
     if (!is_gfe) {
         append_params_raw(url, sizeof(url), LiGetLaunchUrlQueryParameters());
@@ -763,6 +793,9 @@ static int load_server_status(GS_CLIENT hnd, PSERVER_DATA server) {
         char *serverCodecModeSupportText = NULL;
         char *httpsPortText = NULL;
         char *externalPortText = NULL;
+        char *virtualDisplayCapableText = NULL;
+        char *virtualDisplayDriverReadyText = NULL;
+        char *permissionText = NULL;
 
         ret = GS_INVALID;
 
@@ -849,6 +882,11 @@ static int load_server_status(GS_CLIENT hnd, PSERVER_DATA server) {
             goto cleanup;
         }
 
+        xml_search(data->memory, data->size, "VirtualDisplayCapable", &virtualDisplayCapableText);
+        xml_search(data->memory, data->size, "VirtualDisplayDriverReady", &virtualDisplayDriverReadyText);
+        xml_search(data->memory, data->size, "Permission", &permissionText);
+        xml_servercmds(data->memory, data->size, &server->serverCmds, &server->serverCmdsCount);
+
         // These fields are present on all version of GFE that this client supports
         if (!strlen(currentGameText) || !strlen(pairedText) || !strlen(server->serverInfo.serverInfoAppVersion) ||
             !strlen(stateText)) {
@@ -869,6 +907,9 @@ static int load_server_status(GS_CLIENT hnd, PSERVER_DATA server) {
         server->isGfe = strstr(stateText, "MJOLNIR") != NULL;
         server->httpsPort = httpsPortText == NULL ? 0 : (int) strtol(httpsPortText, NULL, 0);
         server->extPort = externalPortText == NULL ? 0 : (int) strtol(externalPortText, NULL, 0);
+        server->vDisplaySupported = virtualDisplayCapableText != NULL && strcmp(virtualDisplayCapableText, "true") == 0;
+        server->vDisplayDriverReady = virtualDisplayDriverReadyText != NULL && strcmp(virtualDisplayDriverReadyText, "true") == 0;
+        server->permission = permissionText == NULL ? 0 : (uint32_t) strtoul(permissionText, NULL, 0);
 
         if (strstr(stateText, "_SERVER_BUSY") == NULL) {
             // After GFE 2.8, current game remains set even after streaming
@@ -897,6 +938,16 @@ static int load_server_status(GS_CLIENT hnd, PSERVER_DATA server) {
 
         if (serverCodecModeSupportText != NULL) {
             free(serverCodecModeSupportText);
+        }
+
+        if (virtualDisplayCapableText != NULL) {
+            free(virtualDisplayCapableText);
+        }
+        if (virtualDisplayDriverReadyText != NULL) {
+            free(virtualDisplayDriverReadyText);
+        }
+        if (permissionText != NULL) {
+            free(permissionText);
         }
 
         i++;

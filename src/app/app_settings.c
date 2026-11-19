@@ -83,6 +83,8 @@ void settings_initialize(app_settings_t *config, char *conf_dir) {
     config->hevc = true;
     config->av1 = false;
     config->stick_deadzone = 7;
+    config->virtual_display = false;
+    config->scale_factor = 100;
 
     config->conf_dir = conf_dir;
     config->ini_path = path_join(conf_dir, CONF_NAME_MOONLIGHT);
@@ -119,6 +121,8 @@ bool settings_save(app_settings_t *config) {
     ini_write_bool(fp, "localaudio", config->localaudio);
     ini_write_bool(fp, "quitappafter", config->quitappafter);
     ini_write_bool(fp, "viewonly", config->viewonly);
+    ini_write_bool(fp, "virtual_display", config->virtual_display);
+    ini_write_int(fp, "scale_factor", config->scale_factor);
 
     ini_write_section(fp, "input");
     ini_write_bool(fp, "absmouse", config->absmouse);
@@ -289,6 +293,10 @@ static int settings_parse(app_settings_t *config, const char *section, const cha
         config->quitappafter = INI_IS_TRUE(value);
     } else if (INI_NAME_MATCH("viewonly")) {
         config->viewonly = INI_IS_TRUE(value);
+    } else if (INI_NAME_MATCH("virtual_display")) {
+        config->virtual_display = INI_IS_TRUE(value);
+    } else if (INI_NAME_MATCH("scale_factor")) {
+        set_int(&config->scale_factor, value);
     } else if (INI_NAME_MATCH("absmouse")) {
         config->absmouse = INI_IS_TRUE(value);
     } else if (INI_NAME_MATCH("virtual_mouse")) {

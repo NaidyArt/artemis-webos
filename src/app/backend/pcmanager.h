@@ -100,6 +100,9 @@ bool pcmanager_manual_add(pcmanager_t *manager, hostport_t *host, pcmanager_call
 bool pcmanager_pair(pcmanager_t *manager, const uuidstr_t *uuid, char *pin, pcmanager_callback_t callback,
                     void *userdata);
 
+bool pcmanager_pair_otp(pcmanager_t *manager, const uuidstr_t *uuid, const char *pin, const char *passphrase,
+                        pcmanager_callback_t callback, void *userdata);
+
 /**
  * Quit application running on host
  * @param manager

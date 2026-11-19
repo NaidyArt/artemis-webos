@@ -43,4 +43,6 @@ int xml_applist(char *data, size_t len, PAPP_LIST *app_list);
 
 int xml_modelist(char *data, size_t len, PDISPLAY_MODE *mode_list);
 
+int xml_servercmds(char *data, size_t len, char ***cmds, int *count);
+
 int xml_status(char *data, size_t len);

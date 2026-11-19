@@ -261,6 +261,8 @@ void session_config_init(app_t *app, session_config_t *config, const SERVER_DATA
     config->local_audio = app_config->localaudio;
     config->view_only = app_config->viewonly;
     config->sops = app_config->sops;
+    config->virtual_display = app_config->virtual_display;
+    config->scale_factor = app_config->scale_factor;
     if (app_config->stick_deadzone < 0) {
         config->stick_deadzone = 0;
     } else if (app_config->stick_deadzone > 100) {

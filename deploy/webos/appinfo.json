@@ -1,16 +1,16 @@
 {
     "id": "@WEBOS_APPINFO_ID@",
     "version": "@PROJECT_VERSION@",
-    "vendor": "Mariotaku Lee",
+    "vendor": "ClassicOldSong / Artemis Team",
     "type": "native",
     "main": "bin/moonlight",
-    "title": "Moonlight",
+    "title": "Artemis",
     "icon": "icon.png",
     "iconColor": "#ffffff",
     "largeIcon": "icon_large.png",
     "splashBackground": "splash.png",
-    "dialAppName": "Moonlight",
-    "appDescription": "Open Source NVIDIA GameStream Client",
+    "dialAppName": "Artemis",
+    "appDescription": "Artemis Game Streaming Client for webOS (Apollo Companion)",
     "supportTouchMode": "full",
     "useAllMouseButtons": true
 }

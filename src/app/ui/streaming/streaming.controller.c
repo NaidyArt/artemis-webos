@@ -18,6 +18,8 @@ static void open_keyboard(lv_event_t *event);
 
 static void toggle_vmouse(lv_event_t *event);
 
+static void open_server_cmds(lv_event_t *event);
+
 static void hide_overlay(lv_event_t *event);
 
 static bool show_overlay(streaming_controller_t *controller);
@@ -201,6 +203,7 @@ static void on_view_created(lv_fragment_t *self, lv_obj_t *view) {
     lv_obj_add_event_cb(controller->suspend_btn, suspend_streaming, LV_EVENT_CLICKED, self);
     lv_obj_add_event_cb(controller->kbd_btn, open_keyboard, LV_EVENT_CLICKED, self);
     lv_obj_add_event_cb(controller->vmouse_btn, toggle_vmouse, LV_EVENT_CLICKED, self);
+    lv_obj_add_event_cb(controller->server_cmd_btn, open_server_cmds, LV_EVENT_CLICKED, self);
     lv_obj_add_event_cb(controller->base.obj, hide_overlay, LV_EVENT_CLICKED, self);
     lv_obj_add_event_cb(controller->overlay, overlay_key_cb, LV_EVENT_KEY, controller);
     lv_obj_add_event_cb(controller->base.obj, hide_overlay, LV_EVENT_CANCEL, controller);
@@ -278,6 +281,38 @@ static void toggle_vmouse(lv_event_t *event) {
     hide_overlay(event);
     app_t *app = controller->global;
     session_toggle_vmouse(app->session);
+}
+
+static void on_exec_cmd_click(lv_event_t *event) {
+    uintptr_t cmd_idx = (uintptr_t) lv_event_get_user_data(event);
+    LiSendExecServerCmd((uint8_t) cmd_idx);
+    streaming_notice_show("Command executed");
+    lv_obj_t *target = lv_event_get_target(event);
+    lv_msgbox_close(target->parent->parent);
+}
+
+static void open_server_cmds(lv_event_t *event) {
+    streaming_controller_t *controller = lv_event_get_user_data(event);
+    session_t *session = controller->global->session;
+    if (!session || !session->server) {
+        return;
+    }
+    SERVER_DATA *server = session->server;
+    if (!server->serverCmds || server->serverCmdsCount == 0) {
+        streaming_notice_show("No Server Commands defined in Apollo");
+        return;
+    }
+
+    lv_obj_t *mbox = lv_msgbox_create(NULL, locstr("Apollo Server Commands"), NULL, NULL, true);
+    lv_obj_t *content = lv_msgbox_get_content(mbox);
+    lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_size(content, LV_DPX(320), LV_SIZE_CONTENT);
+
+    for (int i = 0; i < server->serverCmdsCount; i++) {
+        lv_obj_t *btn = lv_list_add_btn(content, NULL, server->serverCmds[i]);
+        lv_obj_add_event_cb(btn, on_exec_cmd_click, LV_EVENT_CLICKED, (void *)(uintptr_t) i);
+    }
+    lv_obj_center(mbox);
 }
 
 bool show_overlay(streaming_controller_t *controller) {

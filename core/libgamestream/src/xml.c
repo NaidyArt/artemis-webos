@@ -131,6 +131,67 @@ int xml_modelist(char *data, size_t len, PDISPLAY_MODE *mode_list) {
 
 }
 
+typedef struct {
+    char **items;
+    int count;
+    int capacity;
+} servercmd_list_t;
+
+static void XMLCALL start_servercmd_element(void *userData, const char *name, const char **atts) {
+    struct xml_query *search = (struct xml_query *) userData;
+    if (strcmp("ServerCommand", name) == 0) {
+        search->memory = malloc(1);
+        search->size = 0;
+        search->start = 1;
+    }
+}
+
+static void XMLCALL end_servercmd_element(void *userData, const char *name) {
+    struct xml_query *search = (struct xml_query *) userData;
+    if (strcmp("ServerCommand", name) == 0 && search->start) {
+        servercmd_list_t *list = (servercmd_list_t *) search->data;
+        if (list != NULL && search->memory != NULL) {
+            if (list->count >= list->capacity) {
+                list->capacity = list->capacity == 0 ? 4 : list->capacity * 2;
+                list->items = realloc(list->items, sizeof(char *) * list->capacity);
+            }
+            list->items[list->count++] = search->memory;
+            search->memory = NULL;
+        }
+        search->start = 0;
+    }
+}
+
+int xml_servercmds(char *data, size_t len, char ***cmds, int *count) {
+    servercmd_list_t cmd_list = {0};
+    struct xml_query query = {.data = &cmd_list};
+    XML_Parser parser = XML_ParserCreate("UTF-8");
+    XML_SetUserData(parser, &query);
+    XML_SetElementHandler(parser, start_servercmd_element, end_servercmd_element);
+    XML_SetCharacterDataHandler(parser, write_cdata);
+    if (!XML_Parse(parser, data, (int) len, 1)) {
+        int code = XML_GetErrorCode(parser);
+        const char *error = XML_ErrorString(code);
+        XML_ParserFree(parser);
+        if (query.memory != NULL) {
+            free(query.memory);
+        }
+        for (int i = 0; i < cmd_list.count; i++) {
+            free(cmd_list.items[i]);
+        }
+        free(cmd_list.items);
+        return gs_set_error(GS_INVALID, "XML error %d: %s", code, error);
+    }
+
+    XML_ParserFree(parser);
+    if (query.memory != NULL) {
+        free(query.memory);
+    }
+    *cmds = cmd_list.items;
+    *count = cmd_list.count;
+    return GS_OK;
+}
+
 int xml_status(char *data, size_t len) {
     int status = 0;
     XML_Parser parser = XML_ParserCreate("UTF-8");

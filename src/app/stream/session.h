@@ -65,6 +65,8 @@ typedef struct session_config_t {
     bool touchpad_multitouch;
     bool touchpad_natural_scroll;
     uint8_t stick_deadzone;
+    bool virtual_display;
+    int scale_factor;
 } session_config_t;
 
 extern int streaming_errno;

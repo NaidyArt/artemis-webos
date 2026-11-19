@@ -36,6 +36,18 @@ PSERVER_DATA serverdata_clone(const SERVER_DATA *src) {
     server->serverInfo.rtspSessionUrl = strdup_nullable(src->serverInfo.rtspSessionUrl);
     server->serverInfo.serverInfoAppVersion = strdup_nullable(src->serverInfo.serverInfoAppVersion);
     server->serverInfo.serverInfoGfeVersion = strdup_nullable(src->serverInfo.serverInfoGfeVersion);
+    server->vDisplaySupported = src->vDisplaySupported;
+    server->vDisplayDriverReady = src->vDisplayDriverReady;
+    server->permission = src->permission;
+    server->serverCmdsCount = src->serverCmdsCount;
+    if (src->serverCmds && src->serverCmdsCount > 0) {
+        server->serverCmds = malloc(sizeof(char *) * src->serverCmdsCount);
+        for (int i = 0; i < src->serverCmdsCount; i++) {
+            server->serverCmds[i] = strdup_nullable(src->serverCmds[i]);
+        }
+    } else {
+        server->serverCmds = NULL;
+    }
     return server;
 }
 
@@ -55,6 +67,13 @@ void serverdata_free(PSERVER_DATA data) {
     free_nullable((void *) data->serverInfo.serverInfoGfeVersion);
     free_nullable((void *) data->serverInfo.address);
     free_nullable((void *) data->serverInfo.rtspSessionUrl);
+    if (data->serverCmds) {
+        for (int i = 0; i < data->serverCmdsCount; i++) {
+            free_nullable(data->serverCmds[i]);
+        }
+        free(data->serverCmds);
+        data->serverCmds = NULL;
+    }
     free(data);
 }
 

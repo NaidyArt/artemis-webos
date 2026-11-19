@@ -36,8 +36,9 @@ int session_worker(session_t *session) {
         surround_params = "642014523";
     }
 #endif
-    int ret = gs_start_app(client, server, &session->config.stream, appId, server->isGfe, session->config.sops,
-                           session->config.local_audio, app_input_gamepads_mask(&app->input), surround_params);
+    int ret = gs_start_app_ext(client, server, &session->config.stream, appId, server->isGfe, session->config.sops,
+                               session->config.local_audio, app_input_gamepads_mask(&app->input), surround_params,
+                               session->config.virtual_display, session->config.scale_factor);
     if (ret != GS_OK) {
         session_set_state(session, STREAMING_ERROR);
         const char *gs_error = NULL;

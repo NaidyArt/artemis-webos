@@ -65,6 +65,10 @@ typedef struct app_settings_t {
     bool av1;
     int stick_deadzone;
 
+    /* Apollo / Artemis settings */
+    bool virtual_display;
+    int scale_factor;
+
     char *conf_dir;
     char *ini_path;
     char *condb_path;

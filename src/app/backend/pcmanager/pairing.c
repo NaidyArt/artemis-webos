@@ -28,6 +28,24 @@ bool pcmanager_pair(pcmanager_t *manager, const uuidstr_t *uuid, char *pin, pcma
     return true;
 }
 
+bool pcmanager_pair_otp(pcmanager_t *manager, const uuidstr_t *uuid, const char *pin, const char *passphrase,
+                        pcmanager_callback_t callback, void *userdata) {
+    SDL_assert_release(manager != NULL);
+    SDL_assert_release(uuid != NULL);
+    SDL_assert_release(pin != NULL);
+    const pclist_t *node = pcmanager_node(manager, uuid);
+    if (node == NULL) {
+        return false;
+    }
+    SERVER_DATA *server = node->server;
+    if (server->paired) { return false; }
+    worker_context_t *ctx = worker_context_new(manager, uuid, callback, userdata);
+    ctx->arg1 = strdup(pin);
+    ctx->arg2 = passphrase ? strdup(passphrase) : NULL;
+    pcmanager_worker_queue(manager, worker_pairing, ctx);
+    return true;
+}
+
 bool pcmanager_manual_add(pcmanager_t *manager, hostport_t *host, pcmanager_callback_t callback, void *userdata) {
     if (host == NULL) {
         return false;

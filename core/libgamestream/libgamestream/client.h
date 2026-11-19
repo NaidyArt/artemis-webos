@@ -47,6 +47,12 @@ typedef struct _SERVER_DATA {
     const char *gsVersion;
     PDISPLAY_MODE modes;
     SERVER_INFORMATION serverInfo;
+    /* Artemis / Apollo extensions */
+    bool vDisplaySupported;
+    bool vDisplayDriverReady;
+    uint32_t permission;
+    char **serverCmds;
+    int serverCmdsCount;
 } SERVER_DATA, *PSERVER_DATA;
 
 typedef struct GS_CLIENT_T *GS_CLIENT;
@@ -70,11 +76,17 @@ int gs_get_status(GS_CLIENT hnd, PSERVER_DATA server, const char *address, uint1
 int gs_start_app(GS_CLIENT hnd, PSERVER_DATA server, PSTREAM_CONFIGURATION config, int appId, bool is_gfe, bool sops,
                  bool localaudio, int gamepad_mask, const char *surround_params);
 
+int gs_start_app_ext(GS_CLIENT hnd, PSERVER_DATA server, PSTREAM_CONFIGURATION config, int appId, bool is_gfe, bool sops,
+                     bool localaudio, int gamepad_mask, const char *surround_params,
+                     bool virtual_display, int scale_factor);
+
 int gs_applist(GS_CLIENT hnd, const SERVER_DATA *server, PAPP_LIST *app_list);
 
 int gs_unpair(GS_CLIENT hnd, PSERVER_DATA server);
 
 int gs_pair(GS_CLIENT hnd, PSERVER_DATA server, const char *pin);
+
+int gs_pair_otp(GS_CLIENT hnd, PSERVER_DATA server, const char *pin, const char *passphrase);
 
 int gs_quit_app(GS_CLIENT hnd, PSERVER_DATA server);
 
