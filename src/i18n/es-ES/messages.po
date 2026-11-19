@@ -38,8 +38,8 @@ msgid "OK"
 msgstr "Aceptar"
 
 #: src/app/app.c:278
-msgid "Quit Moonlight?"
-msgstr "¿Salir de Moonlight?"
+msgid "Quit Artemis?"
+msgstr "¿Salir de Artemis?"
 
 #: src/app/app_settings.c:33
 msgid "Stereo"

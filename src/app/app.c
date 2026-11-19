@@ -287,7 +287,7 @@ void app_process_events(app_t *app) {
 
 void app_quit_confirm() {
     static const char *btn_txts[] = {translatable("Cancel"), translatable("OK"), ""};
-    lv_obj_t *mbox = lv_msgbox_create_i18n(NULL, NULL, locstr("Quit Moonlight?"), btn_txts, false);
+    lv_obj_t *mbox = lv_msgbox_create_i18n(NULL, NULL, locstr("Quit Artemis?"), btn_txts, false);
     lv_obj_add_event_cb(mbox, quit_confirm_cb, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_center(mbox);
 }
@@ -352,7 +352,7 @@ static void libs_init(app_t *app, int argc, char *argv[]) {
 
 
 #if FEATURE_INPUT_LIBCEC
-    cec_sdl_init(&app->cec, "Moonlight");
+    cec_sdl_init(&app->cec, "Artemis");
 #endif
 }
 
