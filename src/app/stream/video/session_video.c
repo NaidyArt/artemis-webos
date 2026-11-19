@@ -199,7 +199,7 @@ int vdec_delegate_submit(PDECODE_UNIT decodeUnit) {
     vdec_temp_stats.totalFrames++;
 
     vdec_temp_stats.totalCaptureLatency += decodeUnit->frameHostProcessingLatency;
-    vdec_temp_stats.totalReassemblyTimeUs += (uint32_t) (decodeUnit->enqueueTimeUs - decodeUnit->receiveTimeUs);
+    vdec_temp_stats.totalReassemblyTimeUs += (uint32_t) ((decodeUnit->enqueueTimeMs - decodeUnit->receiveTimeMs) * 1000);
     vdec_stream_info.has_host_latency |= decodeUnit->frameHostProcessingLatency > 0;
     size_t length = 0;
     for (PLENTRY entry = decodeUnit->bufferList; entry != NULL; entry = entry->next) {
@@ -215,10 +215,8 @@ int vdec_delegate_submit(PDECODE_UNIT decodeUnit) {
         if (vdec_stream_info.width == 0 || vdec_stream_info.height == 0) {
             stream_info_parse_size(decodeUnit, &vdec_stream_info);
         }
-        // Both sides come from PltGetMicroseconds(), so they share an epoch. Limelight.h documents
-        // neither that fact nor a supported way to age enqueueTimeUs, so re-check this subtraction
-        // whenever moonlight-common-c is bumped: a different clock underflows it silently.
-        vdec_temp_stats.totalSubmitTimeUs += (uint32_t) (LiGetMicroseconds() - decodeUnit->enqueueTimeUs);
+        // Both sides come from PltGetMillis(), so they share an epoch.
+        vdec_temp_stats.totalSubmitTimeUs += (uint32_t) ((LiGetMillis() - decodeUnit->enqueueTimeMs) * 1000);
         vdec_temp_stats.submittedFrames++;
         if (need_idr_on_resume) {
             // We dropped at least one frame while the decoder was in a
