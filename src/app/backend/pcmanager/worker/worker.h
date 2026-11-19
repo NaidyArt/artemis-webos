@@ -8,6 +8,7 @@ typedef struct worker_context_t {
     pcmanager_t *manager;
     uuidstr_t uuid;
     void *arg1;
+    void *arg2;
 
     int result;
     char *error;

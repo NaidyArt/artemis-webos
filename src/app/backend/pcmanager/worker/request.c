@@ -27,6 +27,9 @@ void worker_context_finalize(worker_context_t *context, int result) {
     if (context->arg1 != NULL) {
         free(context->arg1);
     }
+    if (context->arg2 != NULL) {
+        free(context->arg2);
+    }
     if (context->error != NULL) {
         free(context->error);
     }
