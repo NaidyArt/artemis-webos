@@ -282,8 +282,8 @@ void session_config_init(app_t *app, session_config_t *config, const SERVER_DATA
         config->stream.bitrate = settings_optimal_bitrate(&video_cap, config->stream.width, config->stream.height,
                                                           config->stream.fps);
     }
-    // Cap framerate to platform request
-    if (video_cap.maxBitrate && config->stream.bitrate > video_cap.maxBitrate) {
+    // Cap bitrate only if exceeding high-bitrate limit (250 Mbps) and platform requested
+    if (video_cap.maxBitrate && config->stream.bitrate > 250000 && config->stream.bitrate > video_cap.maxBitrate) {
         config->stream.bitrate = (int) video_cap.maxBitrate;
     }
     if (video_cap.codecs & SS4S_VIDEO_H264) {
