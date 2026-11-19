@@ -165,6 +165,10 @@ void session_set_mouse_grab(session_t *session, bool grab) {
     session_input_set_mouse_grab(&session->input, grab);
 }
 
+const SERVER_DATA *session_get_server(session_t *session) {
+    return session ? session->server : NULL;
+}
+
 void streaming_display_size(session_t *session, short width, short height) {
     session->display_width = width;
     session->display_height = height;

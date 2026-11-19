@@ -107,3 +107,6 @@ void streaming_enter_overlay(session_t *session, int x, int y, int w, int h);
 void streaming_set_hdr(session_t *session, bool hdr);
 
 void streaming_error(session_t *session, int code, const char *fmt, ...);
+
+const SERVER_DATA *session_get_server(session_t *session);
+

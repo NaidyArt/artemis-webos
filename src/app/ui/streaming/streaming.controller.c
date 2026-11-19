@@ -294,10 +294,10 @@ static void on_exec_cmd_click(lv_event_t *event) {
 static void open_server_cmds(lv_event_t *event) {
     streaming_controller_t *controller = lv_event_get_user_data(event);
     session_t *session = controller->global->session;
-    if (!session || !session->server) {
+    const SERVER_DATA *server = session ? session_get_server(session) : NULL;
+    if (!server) {
         return;
     }
-    SERVER_DATA *server = session->server;
     if (!server->serverCmds || server->serverCmdsCount == 0) {
         streaming_notice_show("No Server Commands defined in Apollo");
         return;
